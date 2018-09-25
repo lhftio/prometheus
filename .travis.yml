@@ -31,13 +31,54 @@ script:
   - bazel test --test_output=all //core/... //pull/...
   - bazel test --test_output=all //pull/tests/integration:scrape-test
   - bazel run -c opt //core/tests/benchmark
-  - mkdir _build
-  - cd _build
-  - cmake ..
+
+  - mkdir _build_internal_deps
+  - cd _build_internal_deps
+  - cmake .. -DUSE_THIRDPARTY_LIBRARIES=ON
   - make -j 4
   - ctest -V
   - mkdir -p deploy
   - make DESTDIR=`pwd`/deploy install
+  - cd ..
+
+  - env | sort
+
+  - pushd .
+  - mkdir 3rdparty/civetweb/_build
+  - cd 3rdparty/civetweb/_build
+  - cmake  .. -DCMAKE_INSTALL_PREFIX=../../../_opt -DCIVETWEB_ENABLE_CXX=ON -DCIVETWEB_ENABLE_SSL=OFF -DBUILD_TESTING=OFF
+  - make -j4
+  - make install
+  - popd
+  - mv _opt/lib/libcxx-library.a _opt/lib/libcivetweb-cpp.a
+
+  - pushd .
+  - mkdir 3rdparty/cpr/_build
+  - cd 3rdparty/cpr/_build
+  - cmake  .. -DCMAKE_INSTALL_PREFIX=../../../_opt -DBUILD_CPR_TESTS=OFF -DUSE_SYSTEM_CURL=ON
+  - make -j4
+  - cp lib/libcpr.a ../../../_opt/lib/
+  - cp -r ../include/cpr ../../../_opt/include/
+  - popd
+
+  - pushd .
+  - mkdir 3rdparty/googletest/_build
+  - cd 3rdparty/googletest/_build
+  - cmake  .. -DCMAKE_INSTALL_PREFIX=../../../_opt
+  - make -j4
+  - make install
+  - popd
+
+  - rm -rf 3rdparty/*
+
+  - mkdir _build_external_deps
+  - cd _build_external_deps
+  - cmake .. -DCMAKE_INSTALL_PREFIX=../_opt -DUSE_THIRDPARTY_LIBRARIES=OFF
+  - make -j 4
+  - ctest -V
+  - mkdir -p deploy
+  - make DESTDIR=`pwd`/deploy install
+  - cd ..
 
 # addons:
 #   coverity_scan:
