@@ -23,7 +23,11 @@ set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 find_package(Threads)
 
 if(ENABLE_TESTING)
-  find_package(googlemock-3rdparty CONFIG REQUIRED PATHS ${PROJECT_SOURCE_DIR}/cmake)
+  if(USE_THIRDPARTY_LIBRARIES)
+    find_package(googlemock-3rdparty CONFIG REQUIRED PATHS ${PROJECT_SOURCE_DIR}/cmake)
+  else()
+    find_package(GTest 1.8.0 CONFIG REQUIRED)
+  endif()
   find_package(GoogleBenchmark)
 endif()
 
